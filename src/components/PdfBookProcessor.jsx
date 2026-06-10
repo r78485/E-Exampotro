@@ -7,25 +7,8 @@ export default function PdfBookProcessor() {
   const [isProcessed, setIsProcessed] = useState(false);
   const [activeChapter, setActiveChapter] = useState(0);
 
-  // Mock data for processed chapters
-  const mockChapters = [
-    {
-      id: 1,
-      title: 'অধ্যায় ১: ভৌত রাশি ও পরিমাপ / Chapter 1: Physical Quantities and Measurement',
-      banglaContent: `পদার্থবিজ্ঞান হলো বিজ্ঞানের একটি প্রাচীন শাখা। এ শাখায় ভৌত জগৎ এবং এর নিয়মাবলি নিয়ে আলোচনা করা হয়। 
-বিজ্ঞানের অন্যান্য শাখা যেমন- রসায়ন, জীববিজ্ঞান ইত্যাদি পদার্থবিজ্ঞানের মৌলিক নিয়মের উপর ভিত্তি করে গড়ে উঠেছে।`,
-      englishContent: `Physics is an ancient branch of science. It deals with the physical world and its laws. 
-Other branches of science like chemistry, biology, etc. are built upon the fundamental principles of physics.`
-    },
-    {
-      id: 2,
-      title: 'অধ্যায় ২: গতি / Chapter 2: Motion',
-      banglaContent: `সময়ের সাথে কোনো বস্তুর অবস্থানের পরিবর্তনকে গতি বলে। 
-যদি কোনো বস্তুর অবস্থানের পরিবর্তন না হয় তবে তাকে স্থির বস্তু বলে। গতির বিভিন্ন প্রকার রয়েছে যেমন রৈখিক গতি, ঘূর্ণন গতি ইত্যাদি।`,
-      englishContent: `The change in position of an object over time is called motion. 
-If an object does not change its position, it is called a stationary object. There are various types of motion such as linear motion, rotational motion, etc.`
-    }
-  ];
+  const [mockChapters, setMockChapters] = useState([]);
+  const [error, setError] = useState(null);
 
   const handleFileUpload = (e) => {
     const selectedFile = e.target.files[0];
@@ -36,14 +19,41 @@ If an object does not change its position, it is called a stationary object. The
     }
   };
 
-  const processFile = () => {
+  const processFile = async () => {
     if (!file) return;
     setIsProcessing(true);
-    // Simulate API call and processing time
-    setTimeout(() => {
+    setError(null);
+
+    const formData = new FormData();
+    formData.append('pdf', file);
+
+    try {
+      // Send the file to our Node.js backend
+      const response = await fetch('http://localhost:5000/api/process-pdf', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.error || 'Failed to process PDF');
+      }
+
+      const data = await response.json();
+      
+      if (data.chapters && data.chapters.length > 0) {
+        setMockChapters(data.chapters);
+        setActiveChapter(0);
+        setIsProcessed(true);
+      } else {
+        throw new Error('No chapters could be extracted from this PDF.');
+      }
+    } catch (err) {
+      console.error('Error processing file:', err);
+      setError(err.message || 'পিডিএফ প্রসেস করার সময় একটি সমস্যা হয়েছে।');
+    } finally {
       setIsProcessing(false);
-      setIsProcessed(true);
-    }, 3000);
+    }
   };
 
   return (
@@ -112,6 +122,11 @@ If an object does not change its position, it is called a stationary object. The
                     </>
                   )}
                 </button>
+                {error && (
+                  <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm border border-red-200">
+                    {error}
+                  </div>
+                )}
               </div>
             )}
           </div>
