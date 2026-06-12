@@ -100,6 +100,89 @@ app.post('/api/process-pdf', upload.single('pdf'), async (req, res) => {
   }
 });
 
+app.post('/api/generate-questions', async (req, res) => {
+  try {
+    const { class: className, subject, book, chapter, formats } = req.body;
+
+    if (!book || !chapter || !formats || formats.length === 0) {
+      return res.status(400).json({ error: 'Book, chapter, and at least one format are required.' });
+    }
+
+    console.log(`Generating questions for Book: ${book}, Chapter: ${chapter}, Formats: ${formats.join(', ')}`);
+
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+    const prompt = `
+      You are an expert educational content creator for Bangladeshi curriculum.
+      Please generate questions for Class ${className}, Subject: ${subject}.
+      Book Name: ${book}
+      Chapter/Unit: ${chapter}
+      
+      Generate questions in Bengali language for the following requested formats: ${formats.join(', ')}.
+      
+      Requirements for formats:
+      - For "Creative MCQ" (সিজোনশীল এমসিকিউ): Provide multiple-choice questions with 4 options and specify the correct answer.
+      - For "Creative Question" (সৃজনশীল প্রশ্ন): Provide a stimulus (উদ্দীপক) followed by 4 questions (ক, খ, গ, ঘ) with their marks. Include a suggested answer or hints for each.
+      - For "Short Question" (সংক্ষিপ্ত প্রশ্ন): Provide simple short answer questions with their direct answers.
+      
+      Return the result STRICTLY as a JSON array of objects. Do not include any markdown formatting like \`\`\`json or \`\`\` in your response.
+      The JSON array should have the following structure:
+      [
+        {
+          "type": "mcq", 
+          "question": "Question text here...",
+          "options": ["Option 1", "Option 2", "Option 3", "Option 4"],
+          "answer": "Correct option text here..."
+        },
+        {
+          "type": "cq",
+          "stimulus": "Stimulus text here...",
+          "questions": [
+            { "label": "ক", "question": "Question text...", "marks": 1, "answer": "Hint or answer..." },
+            { "label": "খ", "question": "Question text...", "marks": 2, "answer": "Hint or answer..." },
+            { "label": "গ", "question": "Question text...", "marks": 3, "answer": "Hint or answer..." },
+            { "label": "ঘ", "question": "Question text...", "marks": 4, "answer": "Hint or answer..." }
+          ]
+        },
+        {
+          "type": "short",
+          "question": "Question text here...",
+          "answer": "Answer here..."
+        }
+      ]
+      
+      Generate a good mix of questions for the given chapter and formats (around 5-10 items total). Ensure they are highly relevant and accurate.
+    `;
+
+    const result = await model.generateContent(prompt);
+    const responseText = result.response.text();
+
+    console.log('Gemini generated questions successfully.');
+
+    let jsonStr = responseText.trim();
+    if (jsonStr.startsWith('\`\`\`json')) {
+      jsonStr = jsonStr.substring(7);
+    }
+    if (jsonStr.startsWith('\`\`\`')) {
+      jsonStr = jsonStr.substring(3);
+    }
+    if (jsonStr.endsWith('\`\`\`')) {
+      jsonStr = jsonStr.substring(0, jsonStr.length - 3);
+    }
+
+    const generatedQuestions = JSON.parse(jsonStr.trim());
+
+    res.json({ questions: generatedQuestions, suggestionId: Date.now().toString() });
+
+  } catch (error) {
+    console.error('Error generating questions:', error);
+    res.status(500).json({ 
+      error: 'An error occurred while generating questions.',
+      details: error.message 
+    });
+  }
+});
+
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });

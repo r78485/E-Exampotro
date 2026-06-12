@@ -9,6 +9,8 @@ import OmrEvaluate from './components/OmrEvaluate';
 import OmrGenerate from './components/OmrGenerate';
 import InstitutionRegistration from './components/InstitutionRegistration';
 import PdfBookProcessor from './components/PdfBookProcessor';
+import Suggestions from './components/Suggestions';
+import QuestionBank from './components/QuestionBank';
 
 function App() {
   const [darkMode, setDarkMode] = useState(false);
@@ -66,6 +68,8 @@ function App() {
               <Route path="/omr-generate" element={<OmrGenerate />} />
               <Route path="/my-institution" element={<InstitutionRegistration />} />
               <Route path="/pdf-processor" element={<PdfBookProcessor />} />
+              <Route path="/suggestions" element={<Suggestions />} />
+              <Route path="/question-bank" element={<QuestionBank />} />
               {/* Add placeholders for the other routes here if needed */}
             </Routes>
           </main>

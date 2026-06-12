@@ -27,7 +27,6 @@ const menuGroups = [
     title: 'মেইন মেনু',
     items: [
       { name: 'ড্যাশবোর্ড', icon: LayoutDashboard, path: '/' },
-      { name: 'বই আপলোড (পিডিএফ)', icon: FileScan, path: '/pdf-processor' },
       { name: '১ ক্লিকে প্রশ্ন তৈরী', icon: Zap, path: '/exam-generator' },
       { name: 'প্রশ্নব্যাংক', icon: Database, path: '/question-bank' },
       { name: 'প্যাকেজ', icon: Package, path: '/packages' },
@@ -37,6 +36,7 @@ const menuGroups = [
   {
     title: 'ব্যবস্থাপনা',
     items: [
+      { name: 'বই আপলোড (পিডিএফ/টেক্সট)', icon: FileScan, path: '/pdf-processor' },
       { name: 'আমার তৈরী প্রশ্ন', icon: ListTodo, path: '/my-questions' },
       { name: 'অনলাইন পরীক্ষা', icon: Globe, path: '/online-exam' },
       { name: 'শিক্ষার্থী', icon: Users, path: '/students' },
