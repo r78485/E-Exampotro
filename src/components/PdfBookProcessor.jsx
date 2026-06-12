@@ -60,7 +60,7 @@ export default function PdfBookProcessor() {
 
     try {
       // Send the file to our Node.js backend
-      const response = await fetch('http://localhost:5000/api/process-pdf', {
+      const response = await fetch('/api/process-pdf', {
         method: 'POST',
         body: formData,
       });
